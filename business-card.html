@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人名片生成器</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        /* CSS 变量定义 - 绿色清新配色 */
+        :root {
+            --primary-green: #2ecc71;
+            --light-green: #27ae60;
+            --pale-green: #a8e6cf;
+            --mint-green: #d4edda;
+            --dark-green: #1e8449;
+            --white: #ffffff;
+            --gray-50: #f8f9fa;
+            --gray-100: #f1f3f4;
+            --gray-200: #e9ecef;
+            --gray-600: #6c757d;
+            --gray-800: #343a40;
+            --gradient-green: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            --gradient-mint: linear-gradient(135deg, #a8e6cf 0%, #d4edda 100%);
+            --shadow-sm: 0 2px 4px rgba(46, 204, 113, 0.1);
+            --shadow-md: 0 4px 12px rgba(46, 204, 113, 0.15);
+            --shadow-lg: 0 8px 24px rgba(46, 204, 113, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* Back Navigation */
+        .back-nav {
+            background: var(--dark-green);
+            padding: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--white);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            margin-left: 1.5rem;
+        }
+
+        .back-nav a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 头部样式 */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--dark-green);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: var(--gray-600);
+            font-size: 1.1rem;
+        }
+
+        /* 主内容布局 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        /* 表单区域样式 */
+        .form-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .form-section h2 {
+            color: var(--dark-green);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* 导出按钮样式 */
+        .export-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .export-btn:active {
+            transform: translateY(0);
+        }
+
+        .export-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 预览区域样式 */
+        .preview-section {
+            position: sticky;
+            top: 1.5rem;
+        }
+
+        .preview-section h2 {
+            color: var(--dark-green);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .card-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        /* 名片样式 */
+        .card {
+            width: 400px;
+            height: 240px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            padding: 1.5rem;
+        }
+
+        /* 名片背景 */
+        .card-background {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 100%;
+            background: var(--gradient-green);
+            clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%);
+            opacity: 0.9;
+        }
+
+        .card-background::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-50px, -50px); }
+        }
+
+        /* 头像区域 */
+        .card-avatar {
+            flex-shrink: 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--gradient-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            margin-right: 1.5rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        #avatarInitial {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        /* 名片信息区域 */
+        .card-info {
+            flex: 1;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .card-info h3 {
+            font-size: 1.5rem;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+            font-weight: 700;
+        }
+
+        .card-title {
+            color: var(--primary-green);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-company {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-bio {
+            color: var(--gray-600);
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 联系方式 */
+        .card-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .contact-item {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+
+        .contact-item.active {
+            display: flex;
+        }
+
+        .contact-item .icon {
+            font-size: 0.9rem;
+        }
+
+        /* 导出提示 */
+        .export-hint {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--mint-green);
+            border-radius: 8px;
+            color: var(--dark-green);
+        }
+
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--gray-600);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-section {
+                position: static;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                height: auto;
+                min-height: 240px;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .card-avatar {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+
+            .card-background {
+                width: 100%;
+                height: 60px;
+                clip-path: none;
+                border-radius: 16px 16px 0 0;
+            }
+
+            .card-contact {
+                align-items: center;
+            }
+        }
+
+        /* 通知样式 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-green);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-nav">
+        <a href="index.html">← 返回工具集合</a>
+    </div>
+    <div class="container">
+        <header>
+            <h1>🌿 个人名片生成器</h1>
+            <p class="subtitle">创建您的专属数字名片</p>
+        </header>
+
+        <main class="main-content">
+            <!-- 左侧：表单输入区 -->
+            <section class="form-section">
+                <h2>填写信息</h2>
+                <form id="cardForm">
+                    <div class="form-group">
+                        <label for="name">姓名 *</label>
+                        <input type="text" id="name" placeholder="请输入姓名" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="title">职位/头衔 *</label>
+                        <input type="text" id="title" placeholder="例如：高级前端工程师" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company">公司</label>
+                        <input type="text" id="company" placeholder="请输入公司名称">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bio">个人简介</label>
+                        <textarea id="bio" rows="3" placeholder="一句话介绍自己..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">邮箱</label>
+                            <input type="email" id="email" placeholder="your@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">电话</label>
+                            <input type="tel" id="phone" placeholder="138-0000-0000">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wechat">微信</label>
+                        <input type="text" id="wechat" placeholder="微信号">
+                    </div>
+
+                    <button type="button" id="exportBtn" class="export-btn">
+                        📥 导出为 PNG
+                    </button>
+                </form>
+            </section>
+
+            <!-- 右侧：实时预览区 -->
+            <section class="preview-section">
+                <h2>实时预览</h2>
+                <div class="card-wrapper">
+                    <div id="cardPreview" class="card">
+                        <!-- 背景装饰 -->
+                        <div class="card-background"></div>
+
+                        <!-- 头像区域 -->
+                        <div class="card-avatar">
+                            <span id="avatarInitial">名</span>
+                        </div>
+
+                        <!-- 信息区域 -->
+                        <div class="card-info">
+                            <h3 id="displayName">您的姓名</h3>
+                            <p id="displayTitle" class="card-title">您的职位</p>
+                            <p id="displayCompany" class="card-company">公司名称</p>
+
+                            <p id="displayBio" class="card-bio">这里是个人简介...</p>
+
+                            <div class="card-contact">
+                                <div id="displayEmail" class="contact-item">
+                                    <span class="icon">✉️</span>
+                                    <span>your@email.com</span>
+                                </div>
+                                <div id="displayPhone" class="contact-item">
+                                    <span class="icon">📱</span>
+                                    <span>138-0000-0000</span>
+                                </div>
+                                <div id="displayWechat" class="contact-item">
+                                    <span class="icon">💬</span>
+                                    <span>微信号</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 导出提示 -->
+                <div class="export-hint">
+                    <p>💡 点击"导出为 PNG"按钮保存名片</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>© 2024 个人名片生成器 | 绿色清新版</p>
+        </footer>
+    </div>
+
+    <script>
+        // 获取所有表单元素和显示元素
+        const formElements = {
+            name: document.getElementById('name'),
+            title: document.getElementById('title'),
+            company: document.getElementById('company'),
+            bio: document.getElementById('bio'),
+            email: document.getElementById('email'),
+            phone: document.getElementById('phone'),
+            wechat: document.getElementById('wechat')
+        };
+
+        const displayElements = {
+            name: document.getElementById('displayName'),
+            title: document.getElementById('displayTitle'),
+            company: document.getElementById('displayCompany'),
+            bio: document.getElementById('displayBio'),
+            email: document.getElementById('displayEmail'),
+            phone: document.getElementById('displayPhone'),
+            wechat: document.getElementById('displayWechat'),
+            avatarInitial: document.getElementById('avatarInitial')
+        };
+
+        const exportBtn = document.getElementById('exportBtn');
+        const cardPreview = document.getElementById('cardPreview');
+
+        // 更新头像首字母
+        function updateAvatarInitial(name) {
+            const initial = name ? name.charAt(0).toUpperCase() : '名';
+            displayElements.avatarInitial.textContent = initial;
+        }
+
+        // 更新显示文本
+        function updateDisplay(inputElement, displayElement, defaultValue) {
+            const value = inputElement.value.trim();
+            displayElement.textContent = value || defaultValue;
+            return value;
+        }
+
+        // 更新联系方式显示（有值时显示，无值时隐藏）
+        function updateContactDisplay(inputElement, displayElement) {
+            const value = inputElement.value.trim();
+            if (value) {
+                displayElement.classList.add('active');
+                displayElement.querySelector('span:last-child').textContent = value;
+            } else {
+                displayElement.classList.remove('active');
+            }
+            return value;
+        }
+
+        // 实时预览事件监听
+        formElements.name.addEventListener('input', (e) => {
+            updateDisplay(e.target, displayElements.name, '您的姓名');
+            updateAvatarInitial(e.target.value);
+        });
+
+        formElements.title.addEventListener('input', (e) => {
+            updateDisplay(e.target, displayElements.title, '您的职位');
+        });
+
+        formElements.company.addEventListener('input', (e) => {
+            updateDisplay(e.target, displayElements.company, '公司名称');
+        });
+
+        formElements.bio.addEventListener('input', (e) => {
+            updateDisplay(e.target, displayElements.bio, '这里是个人简介...');
+        });
+
+        formElements.email.addEventListener('input', (e) => {
+            updateContactDisplay(e.target, displayElements.email);
+        });
+
+        formElements.phone.addEventListener('input', (e) => {
+            updateContactDisplay(e.target, displayElements.phone);
+        });
+
+        formElements.wechat.addEventListener('input', (e) => {
+            updateContactDisplay(e.target, displayElements.wechat);
+        });
+
+        // 显示通知提示
+        function showNotification(message, isError = false) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            if (isError) {
+                notification.style.background = '#e74c3c';
+            }
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // 导出为 PNG 功能
+        exportBtn.addEventListener('click', async () => {
+            // 验证必填字段
+            if (!formElements.name.value.trim() || !formElements.title.value.trim()) {
+                showNotification('请至少填写姓名和职位信息！', true);
+                formElements.name.focus();
+                return;
+            }
+
+            try {
+                // 显示加载状态
+                exportBtn.disabled = true;
+                exportBtn.innerHTML = '🔄 正在生成...';
+
+                // 使用 html2canvas 生成图片
+                const canvas = await html2canvas(cardPreview, {
+                    backgroundColor: null,
+                    scale: 2,
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true
+                });
+
+                // 转换为图片并下载
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    const fileName = `${formElements.name.value.trim()}_名片.png`;
+
+                    link.download = fileName;
+                    link.href = url;
+                    link.click();
+
+                    // 清理
+                    URL.revokeObjectURL(url);
+
+                    // 恢复按钮状态
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = '📥 导出为 PNG';
+
+                    // 成功提示
+                    showNotification('✅ 名片已成功导出！');
+                }, 'image/png');
+
+            } catch (error) {
+                console.error('导出失败:', error);
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = '📥 导出为 PNG';
+                showNotification('❌ 导出失败，请重试', true);
+            }
+        });
+
+        // 初始化：设置默认值
+        updateAvatarInitial(formElements.name.value);
+    </script>
+</body>
+</html>

@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中英文单词消消乐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+
+        /* Back Navigation */
+        .back-nav {
+            width: 100%;
+            background: rgba(102, 126, 234, 0.9);
+            padding: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--white);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            margin-left: 2rem;
+        }
+
+        .back-nav a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .game-subtitle {
+            color: #764ba2;
+            font-size: 1.1rem;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+            min-height: 400px;
+        }
+
+        .word-card {
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .word-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+        }
+
+        .word-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .word-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            transform: scale(1.05);
+        }
+
+        .word-card.correct {
+            animation: correctMatch 0.5s ease;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border-color: #11998e;
+            color: white;
+        }
+
+        .word-card.correct::before {
+            opacity: 0.1;
+        }
+
+        .word-card.wrong {
+            animation: wrongMatch 0.5s ease;
+            border-color: #f5576c;
+        }
+
+        .word-card.matched {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .word-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            position: relative;
+            z-index: 1;
+        }
+
+        .word-card.correct .word-text {
+            color: white;
+        }
+
+        .word-type {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .word-card.correct .word-type {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @keyframes correctMatch {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes wrongMatch {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .control-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-over-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .game-over-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .modal-score {
+            font-size: 1.5rem;
+            color: #764ba2;
+            margin-bottom: 30px;
+        }
+
+        .timer-warning {
+            animation: timerPulse 0.5s ease infinite;
+        }
+
+        @keyframes timerPulse {
+            0%, 100% { color: white; }
+            50% { color: #ff6b6b; }
+        }
+
+        @media (max-width: 768px) {
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            .word-card {
+                padding: 15px;
+                min-height: 80px;
+            }
+
+            .word-text {
+                font-size: 1rem;
+            }
+
+            .game-title {
+                font-size: 1.8rem;
+            }
+
+            .stat-value {
+                font-size: 1.4rem;
+            }
+
+            .difficulty-selector {
+                flex-wrap: wrap;
+            }
+
+            .difficulty-btn {
+                padding: 8px 20px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .game-container {
+                padding: 20px 15px;
+            }
+
+            .word-card {
+                padding: 12px;
+                min-height: 70px;
+            }
+
+            .word-text {
+                font-size: 0.9rem;
+            }
+
+            .word-type {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-nav">
+        <a href="index.html">← 返回工具集合</a>
+    </div>
+    <div class="game-container">
+        <div class="game-header">
+            <h1 class="game-title">🎮 中英文单词消消乐</h1>
+            <p class="game-subtitle">找出中文和英文的对应配对</p>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat-item">
+                <div class="stat-label">得分</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">时间</div>
+                <div class="stat-value" id="timer">60</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">配对</div>
+                <div class="stat-value" id="matches">0/8</div>
+            </div>
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="difficulty-btn active" data-difficulty="easy">简单</button>
+            <button class="difficulty-btn" data-difficulty="medium">中等</button>
+            <button class="difficulty-btn" data-difficulty="hard">困难</button>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="game-controls">
+            <button class="control-btn start-btn" id="startBtn">开始游戏</button>
+            <button class="control-btn restart-btn" id="restartBtn" disabled>重新开始</button>
+        </div>
+    </div>
+
+    <div class="game-over-modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modalTitle">游戏结束！</h2>
+            <p class="modal-score" id="modalScore">得分：0</p>
+            <button class="control-btn start-btn" id="modalRestartBtn">再玩一次</button>
+        </div>
+    </div>
+
+    <script>
+        // 单词库
+        const wordPairs = {
+            easy: [
+                { chinese: '苹果', english: 'Apple' },
+                { chinese: '香蕉', english: 'Banana' },
+                { chinese: '猫', english: 'Cat' },
+                { chinese: '狗', english: 'Dog' },
+                { chinese: '书', english: 'Book' },
+                { chinese: '笔', english: 'Pen' },
+                { chinese: '水', english: 'Water' },
+                { chinese: '太阳', english: 'Sun' }
+            ],
+            medium: [
+                { chinese: '电脑', english: 'Computer' },
+                { chinese: '手机', english: 'Phone' },
+                { chinese: '音乐', english: 'Music' },
+                { chinese: '电影', english: 'Movie' },
+                { chinese: '朋友', english: 'Friend' },
+                { chinese: '家庭', english: 'Family' },
+                { chinese: '学校', english: 'School' },
+                { chinese: '工作', english: 'Job' }
+            ],
+            hard: [
+                { chinese: '环境', english: 'Environment' },
+                { chinese: '技术', english: 'Technology' },
+                { chinese: '经济', english: 'Economy' },
+                { chinese: '文化', english: 'Culture' },
+                { chinese: '社会', english: 'Society' },
+                { chinese: '科学', english: 'Science' },
+                { chinese: '历史', english: 'History' },
+                { chinese: '艺术', english: 'Art' }
+            ]
+        };
+
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            matches: 0,
+            totalPairs: 8,
+            timer: 60,
+            timerInterval: null,
+            selectedCards: [],
+            matchedPairs: 0,
+            difficulty: 'easy',
+            isPlaying: false
+        };
+
+        // DOM 元素
+        const gameBoard = document.getElementById('gameBoard');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const matchesDisplay = document.getElementById('matches');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalScore = document.getElementById('modalScore');
+        const modalRestartBtn = document.getElementById('modalRestartBtn');
+
+        // 洗牌算法
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 创建单词卡片
+        function createWordCards(pairs) {
+            const cards = [];
+            pairs.forEach((pair, index) => {
+                cards.push({
+                    id: `cn-${index}`,
+                    text: pair.chinese,
+                    type: 'chinese',
+                    pairId: index
+                });
+                cards.push({
+                    id: `en-${index}`,
+                    text: pair.english,
+                    type: 'english',
+                    pairId: index
+                });
+            });
+            return shuffle(cards);
+        }
+
+        // 渲染游戏面板
+        function renderBoard(cards) {
+            gameBoard.innerHTML = '';
+            cards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'word-card';
+                cardElement.dataset.id = card.id;
+                cardElement.dataset.pairId = card.pairId;
+                cardElement.innerHTML = `
+                    <div class="word-text">${card.text}</div>
+                    <div class="word-type">${card.type === 'chinese' ? '中文' : 'English'}</div>
+                `;
+                cardElement.addEventListener('click', () => handleCardClick(cardElement));
+                gameBoard.appendChild(cardElement);
+            });
+        }
+
+        // 处理卡片点击
+        function handleCardClick(cardElement) {
+            if (!gameState.isPlaying) return;
+            if (cardElement.classList.contains('matched')) return;
+            if (gameState.selectedCards.length >= 2) return;
+            if (cardElement.classList.contains('selected')) return;
+
+            // 选中卡片
+            cardElement.classList.add('selected');
+            gameState.selectedCards.push(cardElement);
+
+            // 检查是否选中了两张卡片
+            if (gameState.selectedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        // 检查配对
+        function checkMatch() {
+            const [card1, card2] = gameState.selectedCards;
+            const pairId1 = parseInt(card1.dataset.pairId);
+            const pairId2 = parseInt(card2.dataset.pairId);
+
+            if (pairId1 === pairId2) {
+                // 配对成功
+                setTimeout(() => {
+                    card1.classList.add('correct', 'matched');
+                    card2.classList.add('correct', 'matched');
+                    gameState.score += 10;
+                    gameState.matches++;
+                    gameState.matchedPairs++;
+                    updateStats();
+
+                    // 检查是否完成所有配对
+                    if (gameState.matchedPairs === gameState.totalPairs) {
+                        endGame(true);
+                    }
+                }, 300);
+            } else {
+                // 配对失败
+                setTimeout(() => {
+                    card1.classList.add('wrong');
+                    card2.classList.add('wrong');
+                    setTimeout(() => {
+                        card1.classList.remove('selected', 'wrong');
+                        card2.classList.remove('selected', 'wrong');
+                    }, 500);
+                }, 300);
+            }
+
+            // 清空选中卡片
+            setTimeout(() => {
+                gameState.selectedCards = [];
+            }, 500);
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            scoreDisplay.textContent = gameState.score;
+            matchesDisplay.textContent = `${gameState.matchedPairs}/${gameState.totalPairs}`;
+        }
+
+        // 开始游戏
+        function startGame() {
+            // 重置游戏状态
+            gameState = {
+                score: 0,
+                matches: 0,
+                totalPairs: 8,
+                timer: 60,
+                timerInterval: null,
+                selectedCards: [],
+                matchedPairs: 0,
+                difficulty: gameState.difficulty,
+                isPlaying: true
+            };
+
+            // 更新界面
+            updateStats();
+            timerDisplay.textContent = gameState.timer;
+            timerDisplay.classList.remove('timer-warning');
+
+            // 创建并渲染卡片
+            const pairs = wordPairs[gameState.difficulty];
+            const cards = createWordCards(pairs);
+            renderBoard(cards);
+
+            // 启动计时器
+            startTimer();
+
+            // 更新按钮状态
+            startBtn.disabled = true;
+            restartBtn.disabled = false;
+        }
+
+        // 启动计时器
+        function startTimer() {
+            gameState.timerInterval = setInterval(() => {
+                gameState.timer--;
+                timerDisplay.textContent = gameState.timer;
+
+                // 时间警告
+                if (gameState.timer <= 10) {
+                    timerDisplay.classList.add('timer-warning');
+                }
+
+                // 时间到
+                if (gameState.timer <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        // 结束游戏
+        function endGame(isWin) {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timerInterval);
+
+            // 显示结束弹窗
+            modalTitle.textContent = isWin ? '🎉 恭喜通关！' : '⏰ 时间到！';
+            modalScore.textContent = `得分：${gameState.score}${isWin ? ` + 剩余时间奖励 ${gameState.timer * 2}` : ''}`;
+            if (isWin) {
+                gameState.score += gameState.timer * 2;
+                modalScore.textContent = `得分：${gameState.score}`;
+            }
+            gameOverModal.classList.add('show');
+
+            // 更新按钮状态
+            startBtn.disabled = false;
+            restartBtn.disabled = true;
+        }
+
+        // 难度选择
+        difficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (gameState.isPlaying) return;
+
+                difficultyBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameState.difficulty = btn.dataset.difficulty;
+
+                // 根据难度调整时间
+                const timeMap = { easy: 60, medium: 45, hard: 30 };
+                gameState.timer = timeMap[gameState.difficulty];
+                timerDisplay.textContent = gameState.timer;
+            });
+        });
+
+        // 按钮事件
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+        modalRestartBtn.addEventListener('click', () => {
+            gameOverModal.classList.remove('show');
+            startGame();
+        });
+
+        // 点击弹窗外部关闭
+        gameOverModal.addEventListener('click', (e) => {
+            if (e.target === gameOverModal) {
+                gameOverModal.classList.remove('show');
+            }
+        });
+
+        // 初始化
+        timerDisplay.textContent = gameState.timer;
+    </script>
+</body>
+</html>
