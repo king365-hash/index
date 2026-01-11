@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="在线工具集合 - 个人名片生成器、简历展示、单词游戏、货币转换器、番茄计时器">
+    <title>在线工具集合 | Tools Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0e27;
+            --bg-card: #1a1f3a;
+            --neon-blue: #00d4ff;
+            --cyber-purple: #7b2cbf;
+            --neon-green: #39ff14;
+            --text-white: #ffffff;
+            --text-gray: #b8b8d1;
+            --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.3);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 4rem 0 3rem;
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--neon-blue) 0%, var(--cyber-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
+        }
+
+        .hero-subtitle {
+            color: var(--text-gray);
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Search Box */
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1.2rem 2rem 1.2rem 3.5rem;
+            font-size: 1.1rem;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50px;
+            background: var(--bg-card);
+            color: var(--text-white);
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .search-box::placeholder {
+            color: var(--text-gray);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.3rem;
+        }
+
+        /* Tools Grid */
+        .tools-section {
+            padding: 3rem 0 5rem;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .tool-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-decoration: none;
+            color: var(--text-white);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--cyber-purple));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--neon-blue);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .tool-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .tool-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--neon-blue);
+        }
+
+        .tool-card p {
+            color: var(--text-gray);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: auto;
+        }
+
+        .card-tags span {
+            padding: 0.4rem 1rem;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--neon-blue);
+        }
+
+        .use-btn {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.8rem 2rem;
+            background: linear-gradient(135deg, var(--neon-blue) 0%, var(--cyber-purple) 100%);
+            border-radius: 25px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover .use-btn {
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-gray);
+            font-size: 1.2rem;
+            display: none;
+        }
+
+        .no-results.show {
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            border-top: 1px solid rgba(0, 212, 255, 0.1);
+            color: var(--text-gray);
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--neon-blue);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--cyber-purple);
+        }
+
+        /* Hidden class for filtering */
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .tools-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(123, 44, 191, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(50px, 50px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <div class="container">
+        <header>
+            <h1 class="hero-title">在线工具集合</h1>
+            <p class="hero-subtitle">一站式解决你的日常需求</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-box" id="searchBox" placeholder="搜索工具...">
+            </div>
+        </header>
+
+        <section class="tools-section">
+            <div class="tools-grid" id="toolsGrid">
+                <a href="business-card.html" class="tool-card" data-name="名片 生成器 id card generator business">
+                    <div class="card-icon">📇</div>
+                    <h3>个人名片生成器</h3>
+                    <p>快速生成专业个人名片，支持导出PNG格式，自定义样式和内容</p>
+                    <div class="card-tags">
+                        <span>名片</span>
+                        <span>导出</span>
+                        <span>设计</span>
+                    </div>
+                </a>
+
+                <a href="resume.html" class="tool-card" data-name="简历 展示 cv resume 履历">
+                    <div class="card-icon">📄</div>
+                    <h3>个人简历展示</h3>
+                    <p>专业简洁的个人简历展示页面，包含教育经历、工作技能和项目经验</p>
+                    <div class="card-tags">
+                        <span>简历</span>
+                        <span>展示</span>
+                        <span>求职</span>
+                    </div>
+                </a>
+
+                <a href="word-match-game.html" class="tool-card" data-name="单词 游戏 消消乐 english chinese word match">
+                    <div class="card-icon">🎮</div>
+                    <h3>中英文单词消消乐</h3>
+                    <p>趣味单词配对游戏，支持多难度选择，计时挑战，提升英语词汇量</p>
+                    <div class="card-tags">
+                        <span>游戏</span>
+                        <span>学习</span>
+                        <span>英语</span>
+                    </div>
+                </a>
+
+                <a href="currency-converter.html" class="tool-card" data-name="货币 汇率 转换器 exchange rate money currency converter">
+                    <div class="card-icon">💱</div>
+                    <h3>多国货币转换器</h3>
+                    <p>实时汇率转换工具，支持15种主要货币，历史汇率查询和图表展示</p>
+                    <div class="card-tags">
+                        <span>汇率</span>
+                        <span>金融</span>
+                        <span>计算</span>
+                    </div>
+                </a>
+
+                <a href="pomodoro-timer.html" class="tool-card" data-name="番茄 计时器 专注 pomodoro timer focus work">
+                    <div class="card-icon">🍅</div>
+                    <h3>番茄计时器</h3>
+                    <p>专注工作计时工具，支持自定义工作/休息时间，统计数据追踪，桌面通知提醒</p>
+                    <div class="card-tags">
+                        <span>效率</span>
+                        <span>计时</span>
+                        <span>专注</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="no-results" id="noResults">
+                <p>😕 未找到匹配的工具</p>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2024 在线工具集合 | Tools Hub</p>
+            <p>所有工具均可免费使用，无需注册</p>
+            <div class="footer-links">
+                <a href="https://github.com" target="_blank">GitHub</a>
+                <a href="https://github.com" target="_blank">关于我们</a>
+                <a href="https://github.com" target="_blank">联系方式</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Search functionality
+        const searchBox = document.getElementById('searchBox');
+        const toolsGrid = document.getElementById('toolsGrid');
+        const toolCards = document.querySelectorAll('.tool-card');
+        const noResults = document.getElementById('noResults');
+
+        searchBox.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            toolCards.forEach(card => {
+                const dataName = card.getAttribute('data-name').toLowerCase();
+                const cardText = card.textContent.toLowerCase();
+
+                if (dataName.includes(searchTerm) || cardText.includes(searchTerm)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            if (visibleCount === 0) {
+                noResults.classList.add('show');
+            } else {
+                noResults.classList.remove('show');
+            }
+        });
+
+        // Add keyboard navigation
+        searchBox.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const firstVisible = document.querySelector('.tool-card:not(.hidden)');
+                if (firstVisible) {
+                    firstVisible.click();
+                }
+            }
+        });
+
+        // Add smooth scroll and entrance animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.tool-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
