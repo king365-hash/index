@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="图片字幕生成器 - 为图片添加精美字幕">
+    <title>图片字幕生成器 | PicQuote Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: #1a1a1a;
+            --primary-blue: #4A6FFF;
+            --accent-purple: #7B2CBF;
+            --neon-green: #00FF88;
+            --text-white: #ffffff;
+            --text-gray: #b0b0b0;
+            --border-color: #333333;
+            --shadow-glow: 0 0 20px rgba(74, 111, 255, 0.3);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding: 0;
+        }
+
+        /* Back Navigation */
+        .back-nav {
+            background: var(--bg-card);
+            padding: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .back-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-white);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            margin-left: 2rem;
+        }
+
+        .back-nav a:hover {
+            background: var(--primary-blue);
+            transform: translateX(-5px);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-card);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .control-panel h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(74, 111, 255, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-blue);
+            background: rgba(74, 111, 255, 0.1);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--neon-green);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .upload-area p {
+            margin-bottom: 0.5rem;
+            color: var(--text-gray);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-status {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        /* Setting Items */
+        .setting-item {
+            margin-bottom: 1.2rem;
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        .setting-item input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .setting-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(74, 111, 255, 0.5);
+        }
+
+        .setting-item input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            cursor: pointer;
+            border: none;
+        }
+
+        .range-value {
+            display: inline-block;
+            margin-left: 0.5rem;
+            color: var(--primary-blue);
+            font-weight: 600;
+            min-width: 40px;
+        }
+
+        .setting-item input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            background: var(--bg-dark);
+        }
+
+        .setting-item select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            font-size: 0.95rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .setting-item select:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .setting-row input[type="range"] {
+            flex: 1;
+        }
+
+        /* Textarea */
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            margin-top: 0.5rem;
+        }
+
+        .char-count span {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        /* Download Button */
+        .download-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-purple) 100%);
+            border: none;
+            border-radius: 8px;
+            color: var(--text-white);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(74, 111, 255, 0.5);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+            position: relative;
+        }
+
+        .preview-panel h2 {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+        }
+
+        #previewCanvas {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .preview-hint {
+            color: var(--text-gray);
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-gray);
+        }
+
+        .preview-placeholder-icon {
+            font-size: 4rem;
+            opacity: 0.3;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .control-panel {
+                position: static;
+            }
+
+            .preview-panel h2 {
+                position: static;
+                margin-bottom: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .back-nav a {
+                margin-left: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .control-panel {
+                padding: 1rem;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="back-nav">
+        <a href="index.html">← 返回工具集合</a>
+    </div>
+
+    <div class="container">
+        <!-- 左侧控制面板 -->
+        <div class="control-panel">
+            <h2>📸 图片字幕生成器</h2>
+
+            <!-- 图片上传 -->
+            <section class="upload-section">
+                <h3>上传图片</h3>
+                <input type="file" id="imageInput" accept="image/*">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p>点击选择或拖拽图片</p>
+                    <p class="file-status" id="fileStatus">未选择文件</p>
+                </div>
+            </section>
+
+            <!-- 字幕设置 -->
+            <section class="settings-section">
+                <h3>字幕设置</h3>
+
+                <div class="setting-item">
+                    <label>字幕高度位置</label>
+                    <div class="setting-row">
+                        <input type="range" id="captionHeight" min="0" max="100" value="80">
+                        <span class="range-value" id="captionHeightValue">80%</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <label>字体大小</label>
+                    <div class="setting-row">
+                        <input type="range" id="fontSize" min="12" max="100" value="32">
+                        <span class="range-value" id="fontSizeValue">32px</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <label>字体颜色</label>
+                    <input type="color" id="fontColor" value="#FFFFFF">
+                </div>
+
+                <div class="setting-item">
+                    <label>轮廓颜色</label>
+                    <input type="color" id="strokeColor" value="#000000">
+                </div>
+
+                <div class="setting-item">
+                    <label>字体样式</label>
+                    <select id="fontFamily">
+                        <option value="Microsoft YaHei">微软雅黑</option>
+                        <option value="SimHei">黑体</option>
+                        <option value="Arial">Arial</option>
+                        <option value="SimSun">宋体</option>
+                        <option value="KaiTi">楷体</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label>字体粗细</label>
+                    <select id="fontWeight">
+                        <option value="400">正常</option>
+                        <option value="500">中等</option>
+                        <option value="700" selected>粗体</option>
+                        <option value="900">特粗</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label>文字描边宽度</label>
+                    <div class="setting-row">
+                        <input type="range" id="strokeWidth" min="0" max="10" value="3">
+                        <span class="range-value" id="strokeWidthValue">3px</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 字幕内容 -->
+            <section class="content-section">
+                <h3>字幕内容</h3>
+                <textarea id="captionText" placeholder="在此输入字幕内容...&#10;支持多行文本"></textarea>
+                <p class="char-count"><span id="charCount">0</span> 字</p>
+            </section>
+
+            <!-- 导出按钮 -->
+            <button id="downloadBtn" class="download-btn" disabled>⬇️ 下载图片</button>
+        </div>
+
+        <!-- 右侧预览区域 -->
+        <div class="preview-panel">
+            <div id="previewPlaceholder" class="preview-placeholder">
+                <div class="preview-placeholder-icon">🖼️</div>
+                <p>上传图片后在此预览</p>
+            </div>
+            <canvas id="previewCanvas" style="display: none;"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentImage = null;
+        let originalImageWidth = 0;
+        let originalImageHeight = 0;
+
+        // DOM 元素
+        const imageInput = document.getElementById('imageInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileStatus = document.getElementById('fileStatus');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const captionText = document.getElementById('captionText');
+        const charCount = document.getElementById('charCount');
+
+        // 设置项
+        const captionHeight = document.getElementById('captionHeight');
+        const captionHeightValue = document.getElementById('captionHeightValue');
+        const fontSize = document.getElementById('fontSize');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const fontColor = document.getElementById('fontColor');
+        const strokeColor = document.getElementById('strokeColor');
+        const fontFamily = document.getElementById('fontFamily');
+        const fontWeight = document.getElementById('fontWeight');
+        const strokeWidth = document.getElementById('strokeWidth');
+        const strokeWidthValue = document.getElementById('strokeWidthValue');
+
+        // 上传区域点击
+        uploadArea.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        // 文件选择
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleImageUpload(file);
+            }
+        });
+
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleImageUpload(file);
+            }
+        });
+
+        // 处理图片上传
+        function handleImageUpload(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    originalImageWidth = img.width;
+                    originalImageHeight = img.height;
+
+                    // 设置 canvas 尺寸为图片原始尺寸
+                    previewCanvas.width = originalImageWidth;
+                    previewCanvas.height = originalImageHeight;
+
+                    // 更新文件状态
+                    fileStatus.textContent = `已选择: ${file.name}`;
+                    fileStatus.style.color = 'var(--neon-green)';
+
+                    // 显示 canvas，隐藏占位符
+                    previewCanvas.style.display = 'block';
+                    previewPlaceholder.style.display = 'none';
+
+                    // 启用下载按钮
+                    downloadBtn.disabled = false;
+
+                    // 渲染预览
+                    renderCanvas();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 渲染 Canvas
+        function renderCanvas() {
+            if (!currentImage) return;
+
+            const ctx = previewCanvas.getContext('2d');
+
+            // 清空画布
+            ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+            // 绘制图片
+            ctx.drawImage(currentImage, 0, 0, previewCanvas.width, previewCanvas.height);
+
+            // 绘制字幕
+            const text = captionText.value.trim();
+            if (text) {
+                const fontSizeValue = parseInt(fontSize.value);
+                const captionHeightValue = parseInt(captionHeight.value);
+                const strokeWidthNum = parseInt(strokeWidth.value);
+
+                // 计算字幕位置（从底部开始的百分比）
+                const yPos = previewCanvas.height - (previewCanvas.height * captionHeightValue / 100);
+
+                // 设置字体
+                ctx.font = `${fontWeight.value} ${fontSizeValue}px ${fontFamily.value}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+
+                // 处理多行文本
+                const lines = text.split('\n');
+                const lineHeight = fontSizeValue * 1.3;
+                const totalHeight = lines.length * lineHeight;
+                let currentY = yPos - totalHeight + lineHeight;
+
+                // 绘制每一行
+                lines.forEach((line) => {
+                    const x = previewCanvas.width / 2;
+
+                    // 文字描边
+                    if (strokeWidthNum > 0) {
+                        ctx.strokeStyle = strokeColor.value;
+                        ctx.lineWidth = strokeWidthNum;
+                        ctx.lineJoin = 'round';
+                        ctx.strokeText(line, x, currentY);
+                    }
+
+                    // 文字填充
+                    ctx.fillStyle = fontColor.value;
+                    ctx.fillText(line, x, currentY);
+
+                    currentY += lineHeight;
+                });
+            }
+        }
+
+        // 实时更新滑块值显示
+        captionHeight.addEventListener('input', () => {
+            captionHeightValue.textContent = captionHeight.value + '%';
+            renderCanvas();
+        });
+
+        fontSize.addEventListener('input', () => {
+            fontSizeValue.textContent = fontSize.value + 'px';
+            renderCanvas();
+        });
+
+        strokeWidth.addEventListener('input', () => {
+            strokeWidthValue.textContent = strokeWidth.value + 'px';
+            renderCanvas();
+        });
+
+        // 监听所有设置变化
+        fontColor.addEventListener('input', renderCanvas);
+        strokeColor.addEventListener('input', renderCanvas);
+        fontFamily.addEventListener('change', renderCanvas);
+        fontWeight.addEventListener('change', renderCanvas);
+
+        // 字幕内容输入
+        captionText.addEventListener('input', () => {
+            const text = captionText.value;
+            charCount.textContent = text.length;
+            renderCanvas();
+        });
+
+        // 下载图片
+        downloadBtn.addEventListener('click', () => {
+            if (!currentImage) return;
+
+            const link = document.createElement('a');
+            link.download = 'picquote-' + Date.now() + '.png';
+            link.href = previewCanvas.toDataURL('image/png');
+            link.click();
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + S 下载
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (!downloadBtn.disabled) {
+                    downloadBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
